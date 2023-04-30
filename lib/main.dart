@@ -46,9 +46,7 @@ class _MyHomeState extends State<MyHome> {
 
   Size measureSize(TextPainter textPainter, double maxWidth) {
     textPainter.layout(maxWidth: maxWidth);
-    final size = textPainter.size;
-
-    return size;
+    return textPainter.size;
   }
 
   int measureTextOffset(
@@ -61,8 +59,7 @@ class _MyHomeState extends State<MyHome> {
       textSize.height,
     );
     final pos = textPainter.getPositionForOffset(textOffset);
-    final offsetBefore = textPainter.getOffsetBefore(pos.offset) ?? 0;
-    return offsetBefore;
+    return textPainter.getOffsetBefore(pos.offset) ?? 0;
   }
 
   @override
