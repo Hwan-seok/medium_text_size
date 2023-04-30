@@ -1,6 +1,5 @@
 // ignore_for_file: prefer_const_constructors
 
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -29,34 +28,45 @@ class MyHome extends StatefulWidget {
 }
 
 class _MyHomeState extends State<MyHome> {
-  final rand = Random();
-  int idx = 0;
-  final texts = [
-    'One line text',
-    '''
-1. Two line text
-2. which have a different length''',
-    '''
-Multi line text 
-with 
-different
-length''',
-  ];
+  final style = TextStyle(
+    fontSize: 18,
+    fontStyle: FontStyle.italic,
+    fontWeight: FontWeight.bold,
+    fontFeatures: const [FontFeature.tabularFigures()],
+    height: 1.2,
+  );
+  static const maxLine = 2;
+  static const maxWidth = 200.0;
 
-  String get text => texts[idx];
+  bool isExpanded = false;
+  final text =
+      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.";
+
+  String ellipsis = '... Read more';
+
+  Size measureSize(TextPainter textPainter, double maxWidth) {
+    textPainter.layout(maxWidth: maxWidth);
+    final size = textPainter.size;
+
+    return size;
+  }
+
+  int measureTextOffset(
+    TextPainter textPainter,
+    Size textSize,
+    Size ellipsisSize,
+  ) {
+    final textOffset = Offset(
+      textSize.width - ellipsisSize.width,
+      textSize.height,
+    );
+    final pos = textPainter.getPositionForOffset(textOffset);
+    final offsetBefore = textPainter.getOffsetBefore(pos.offset) ?? 0;
+    return offsetBefore;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final style = TextStyle(
-      fontSize: 22,
-      fontStyle: FontStyle.italic,
-      fontWeight: FontWeight.bold,
-      fontFeatures: const [FontFeature.tabularFigures()],
-      height: 1.2,
-    );
-    const maxLine = 4;
-    const maxWidth = 100.0;
-
     final span = TextSpan(
       text: text,
       style: style,
@@ -68,44 +78,52 @@ length''',
       textDirection: TextDirection.ltr,
     );
 
-    textPainter.layout(maxWidth: maxWidth);
-    final size = textPainter.size;
+    final textSize = measureSize(textPainter, maxWidth);
+
+    final ellipsisSpan = TextSpan(
+      text: ellipsis,
+      style: style.copyWith(
+        color: Colors.green,
+        decoration: TextDecoration.underline,
+      ),
+    );
+
+    final ellipsisPainter = TextPainter(
+      text: ellipsisSpan,
+      textDirection: TextDirection.ltr,
+    );
+
+    final ellipsisSize = measureSize(
+      ellipsisPainter,
+      maxWidth,
+    );
+
+    final offsetBeforeEllipsis =
+        measureTextOffset(textPainter, textSize, ellipsisSize);
+
     textPainter.dispose();
-    print("size: $size");
+    ellipsisPainter.dispose();
 
     return Scaffold(
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Container(
-              constraints: BoxConstraints(
-                maxWidth: maxWidth,
-              ),
-              decoration: BoxDecoration(border: Border.all()),
-              child: Text.rich(
-                span,
-                style: style,
-                maxLines: maxLine,
-              ),
+        child: InkWell(
+          onTap: () => setState(() => isExpanded = !isExpanded),
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: maxWidth,
             ),
-            Text(
-              'Text size: $size',
-              style: Theme.of(context).textTheme.headlineMedium,
+            decoration: BoxDecoration(border: Border.all()),
+            child: Text.rich(
+              TextSpan(
+                text:
+                    isExpanded ? text : text.substring(0, offsetBeforeEllipsis),
+                children: [if (!isExpanded) ellipsisSpan],
+              ),
+              style: style,
             ),
-          ],
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: updateText,
-        child: const Icon(Icons.update),
-      ),
     );
-  }
-
-  updateText() {
-    idx++;
-    idx = idx % texts.length;
-    setState(() {});
   }
 }
